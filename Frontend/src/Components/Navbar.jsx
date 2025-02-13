@@ -1,13 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { Menu, X, User, MapPin, Settings, LogOut, Bell, Filter, RefreshCw } from "lucide-react";
 import React from "react";
 import { Link } from "react-router-dom";
-
-
-
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -84,6 +81,51 @@ export default function Navbar() {
     }
   }, []);
 
+  const ProfileButton = () => {
+    const [profileOpen, setProfileOpen] = useState(false);
+    const profileRef = useRef(null);
+
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (profileRef.current && !profileRef.current.contains(event.target)) {
+          setProfileOpen(false);
+        }
+      };
+
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, []);
+
+    return (
+      <div className="relative" ref={profileRef}>
+        <button
+          onClick={() => setProfileOpen((prev) => !prev)}
+          className="flex items-center space-x-2 bg-gray-100 hover:bg-gray-200 transition-all rounded-full p-2 hover:scale-105 transform cursor-pointer"
+        >
+          <User className="h-6 w-6 text-gray-600" />
+        </button>
+        {profileOpen && (
+          <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 ring-1 ring-black ring-opacity-5">
+            <a className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
+              <User className="h-4 w-4 mr-3" />
+              Profile
+            </a>
+            <a className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
+              <Settings className="h-4 w-4 mr-3" />
+              Settings
+            </a>
+            <a className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 cursor-pointer">
+              <LogOut className="h-4 w-4 mr-3" />
+              Logout
+            </a>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const createIcon = (color) =>
     new L.Icon({
       iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`,
@@ -94,38 +136,23 @@ export default function Navbar() {
       shadowSize: [45, 45],
     });
 
-    const applyFilters = () => {
-      const filtered = allUsers.filter(user => {
-          // 1. Check Distance Filter
-          const withinDistance = user.distance <= filters.maxDistance;
-  
-          // 2. Check Online Status (Only if enabled)
-          const matchesOnline = !filters.onlineOnly || user.online === true;
-  
-          // 3. Check Interests (If selected interests exist, user must have at least one of them)
-          const matchesInterests =
-              filters.interests.length === 0 ||
-              user.interests.some(interest => filters.interests.includes(interest));
-  
-          // 4. Check Age Range
-          const withinAgeRange = user.age >= filters.ageRange[0] && user.age <= filters.ageRange[1];
-  
-          // Final Condition: User must satisfy all filter conditions
-          return withinDistance && matchesOnline && matchesInterests && withinAgeRange;
-      });
-  
-      setFilteredUsers(filtered); // Update filtered users list
+  const applyFilters = () => {
+    const filtered = allUsers.filter(user => {
+      const withinDistance = user.distance <= filters.maxDistance;
+      const matchesOnline = !filters.onlineOnly || user.status === "online";
+      const matchesInterests =
+        filters.interests.length === 0 ||
+        user.interests.some(interest => filters.interests.includes(interest));
+      const withinAgeRange = user.age >= filters.ageRange[0] && user.age <= filters.ageRange[1];
+      return withinDistance && matchesOnline && matchesInterests && withinAgeRange;
+    });
+    setFilteredUsers(filtered);
   };
-  
-  
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      // Simulate API call with timeout
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simulate new user data
       const newUser = {
         id: Date.now(),
         name: "New User",
@@ -135,14 +162,12 @@ export default function Navbar() {
         distance: 1.8,
         age: 26
       };
-      
       setAllUsers(prev => [...prev, newUser]);
       setNotifications(prev => [{
         id: Date.now(),
         text: "New user joined nearby!",
         isNew: true
       }, ...prev]);
-      
     } catch (error) {
       console.error("Refresh failed:", error);
     } finally {
@@ -152,7 +177,6 @@ export default function Navbar() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Enhanced Navigation Bar */}
       <nav className="bg-white shadow-lg fixed w-full top-0 z-50 border-b border-gray-200">
         <div className="container mx-auto px-4">
           <div className="flex justify-between h-16 items-center">
@@ -165,11 +189,11 @@ export default function Navbar() {
                   Explore
                 </a>
                 <Link 
-  className="text-gray-600 hover:text-indigo-600 transition-colors px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50"
-  to="/chat"
->
-  Messages
-</Link>
+                  className="text-gray-600 hover:text-indigo-600 transition-colors px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50"
+                  to="/chat"
+                >
+                  Messages
+                </Link>
                 <a className="text-gray-600 hover:text-indigo-600 transition-colors px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50">
                   Events
                 </a>
@@ -186,110 +210,65 @@ export default function Navbar() {
                   <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white" />
                 )}
               </div>
-              
-              <div className="relative">
-                <button
-                  onClick={() => setProfileOpen(!profileOpen)}
-                  className="flex items-center space-x-2 bg-gray-100 hover:bg-gray-200 transition-all rounded-full p-2 hover:scale-105 transform"
-                >
-                  <User className="h-6 w-6 text-gray-600" />
-                </button>
-                
-                {profileOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 ring-1 ring-black ring-opacity-5">
-                    <a className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
-                      <User className="h-4 w-4 mr-3" />
-                      Profile
-                    </a>
-                    <a className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
-                      <Settings className="h-4 w-4 mr-3" />
-                      Settings
-                    </a>
-                    <a className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 cursor-pointer">
-                      <LogOut className="h-4 w-4 mr-3" />
-                      Logout
-                    </a>
-                  </div>
-                )}
-              </div>
+              <ProfileButton />
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Map Section */}
       <div className="container mx-auto pt-20 p-6">
         <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-2xl overflow-hidden border border-gray-200">
           <div className="p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-800">Nearby Users</h2>
               <div className="flex space-x-2">
-             {/* This button just toggles the filter UI */}
-<button 
-  onClick={() => setFilterOpen(!filterOpen)}
-  className="px-4 py-2 bg-indigo-600 text-white rounded-lg 
-             hover:bg-indigo-700 hover:shadow-lg hover:-translate-y-1
-             transition-all duration-300 flex items-center space-x-2 
-             transform active:scale-95 cursor-pointer"
+                <button 
+                  onClick={() => setFilterOpen(!filterOpen)}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex items-center space-x-2 transform active:scale-95 cursor-pointer"
+                >
+                  <Filter className="h-4 w-4" />
+                  <span>Filter</span>
+                </button>
+
+                {filterOpen && (
+                  <div className="absolute top-12 right-0 bg-white p-4 shadow-lg rounded-lg">
+                    <h3 className="text-lg font-bold">Filter Users</h3>
+                    <label>Max Distance: {filters.maxDistance} km</label>
+                    <input 
+                      type="range" 
+                      min="1" 
+                      max="50" 
+                      value={filters.maxDistance} 
+                      onChange={(e) => setFilters({...filters, maxDistance: Number(e.target.value)})}
+                    />
+                    <label className="flex items-center mt-2">
+                      <input 
+                        type="checkbox" 
+                        checked={filters.onlineOnly} 
+                        onChange={(e) => setFilters({...filters, onlineOnly: e.target.checked})}
+                      />
+                      <span className="ml-2">Online Only</span>
+                    </label>
+                    <button 
+  onClick={applyFilters}
+  className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 cursor-pointer"
 >
-  <Filter className="h-4 w-4" />
-  <span>Filter</span>
+  Apply Filters
 </button>
+                  </div>
+                )}
 
-{/* If filterOpen is true, show filter UI */}
-{filterOpen && (
-  <div className="absolute top-12 right-0 bg-white p-4 shadow-lg rounded-lg">
-    <h3 className="text-lg font-bold">Filter Users</h3>
-
-    {/* Distance Filter */}
-    <label>Max Distance: {filters.maxDistance} km</label>
-    <input 
-      type="range" 
-      min="1" 
-      max="50" 
-      value={filters.maxDistance} 
-      onChange={(e) => setFilters({...filters, maxDistance: Number(e.target.value)})}
-    />
-
-    {/* Online-Only Filter */}
-    <label className="flex items-center mt-2">
-      <input 
-        type="checkbox" 
-        checked={filters.onlineOnly} 
-        onChange={(e) => setFilters({...filters, onlineOnly: e.target.checked})}
-      />
-      <span className="ml-2">Online Only</span>
-    </label>
-
-    {/* Apply Filters Button */}
-    <button 
-      onClick={applyFilters}
-      className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-    >
-      Apply Filters
-    </button>
-  </div>
-)}
-
-
-<button 
-  onClick={handleRefresh}
-  disabled={isRefreshing}
-  className="px-4 py-2 bg-purple-600 text-white rounded-lg 
-             hover:bg-purple-700 hover:shadow-lg hover:-translate-y-1
-             transition-all duration-300 flex items-center space-x-2 
-             transform active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
->
-  <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-  <span>{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
-</button>
-
-
-
+                <button 
+                  onClick={handleRefresh}
+                  disabled={isRefreshing}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex items-center space-x-2 transform active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  <span>{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
+                </button>
               </div>
             </div>
 
-            {/* Filter Modal */}
             {filterOpen && (
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-xl shadow-2xl z-50 w-96">
                 <div className="flex justify-between items-center mb-4">
@@ -299,7 +278,6 @@ export default function Navbar() {
                     onClick={() => setFilterOpen(false)}
                   />
                 </div>
-                
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -314,7 +292,6 @@ export default function Navbar() {
                       className="w-full"
                     />
                   </div>
-
                   <div>
                     <label className="flex items-center space-x-2">
                       <input
@@ -326,7 +303,6 @@ export default function Navbar() {
                       <span className="text-sm text-gray-700">Show only online users</span>
                     </label>
                   </div>
-
                   <div className="flex justify-end space-x-2 mt-6">
                     <button
                       onClick={() => setFilterOpen(false)}
@@ -361,10 +337,9 @@ export default function Navbar() {
                       <div className="p-2">
                         <h3 className="font-bold text-lg mb-2">{user.name}</h3>
                         <div className="flex items-center space-x-2 mb-2">
-  <span className={`inline-block h-2 w-2 rounded-full ${user.status === "online" ? "bg-green-400" : "bg-gray-400"}`}></span>
-  <span className="text-sm text-gray-600">{user.status}</span>
-</div>
-
+                          <span className={`inline-block h-2 w-2 rounded-full ${user.status === "online" ? "bg-green-400" : "bg-gray-400"}`}></span>
+                          <span className="text-sm text-gray-600">{user.status}</span>
+                        </div>
                         <div className="text-sm text-gray-600 mb-2">
                           {user.distance} km away
                         </div>

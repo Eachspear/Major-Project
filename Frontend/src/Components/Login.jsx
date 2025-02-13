@@ -61,9 +61,10 @@ function Login() {
             className="w-full p-3 mb-4 border rounded-xl focus:ring focus:ring-indigo-300"
             required
           />
-          <button className="w-full bg-indigo-500 text-white py-3 rounded-xl font-semibold hover:bg-indigo-600 transition">
-            Log In
-          </button>
+          <button className="w-full bg-indigo-500 text-white py-3 rounded-xl font-semibold hover:bg-indigo-600 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-in-out cursor-pointer">
+  Log In
+</button>
+
         </form>
         <p className="text-center text-sm text-gray-600 mt-4">
           Don't have an account? <Link to="/signup" className="text-indigo-500">Sign up</Link>
@@ -73,5 +74,5 @@ function Login() {
   );
 }
 
-export default Login; // ✅ Correct default export at the bottom
+export default Login; 
 

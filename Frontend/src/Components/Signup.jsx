@@ -102,9 +102,11 @@ import "animate.css";
               I agree to the <Link className="text-indigo-500">Terms and Conditions</Link>
             </label>
           </div>
-          <button className="w-full bg-indigo-500 text-white py-3 rounded-xl font-semibold hover:bg-indigo-600 transition">
-            Sign Up
-          </button>
+          <button className="w-full bg-indigo-500 text-white py-3 rounded-xl font-semibold hover:bg-indigo-600 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-in-out cursor-pointer">
+  Sign Up
+</button>
+
+
         </form>
         <p className="text-center text-sm text-gray-600 mt-4">
           Already have an account? <Link to="/login" className="text-indigo-500">Log in</Link>
