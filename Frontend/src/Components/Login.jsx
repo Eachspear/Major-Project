@@ -34,7 +34,7 @@ function Login() {
     
 
     setTimeout(() => {
-      navigate("/navbar");
+      navigate("/map");
     }, 500);
   };
 

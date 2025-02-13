@@ -6,6 +6,7 @@ import Chat from "./Components/Chat";
 import React from "react";
 import { ReactNotifications } from "react-notifications-component";
 import "react-notifications-component/dist/theme.css";
+import Map from "./Components/Map";
 import './index.css';
 
 function App() {
@@ -16,9 +17,11 @@ function App() {
         <Routes>
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/navbar" element={<Navbar />} />
+          
+          
+          <Route path="/map" element={<Map />} /> 
           <Route path="/chat" element={<Chat />} />
-          <Route path="*" element={<Signup />} />
+          <Route path="*" element={<Signup />} /> 
         </Routes>
       </div>
     </Router>
