@@ -1,8 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Signup from "./Components/Signup";
 import Login from "./Components/Login"; // ✅ Importing correctly
-import Navbar from "./Components/Navbar";
-import Chat from "./Components/Chat";
+
+import Map from "./Components/Map";
+
 import React from "react";
 import { ReactNotifications } from "react-notifications-component";
 import "react-notifications-component/dist/theme.css";
@@ -17,11 +18,18 @@ function App() {
         <Routes>
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
+<<<<<<< HEAD
           
           
           <Route path="/map" element={<Map />} /> 
           <Route path="/chat" element={<Chat />} />
           <Route path="*" element={<Signup />} /> 
+=======
+          <Route path="/map" element={<Map />} />
+          
+          
+          <Route path="*" element={<Signup />} />
+>>>>>>> location
         </Routes>
       </div>
     </Router>

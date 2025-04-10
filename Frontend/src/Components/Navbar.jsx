@@ -30,15 +30,26 @@ export default function Navbar({ notifications = [] }) {
       <div className="container mx-auto px-4 flex justify-between items-center">
         {/* Logo */}
         <h1 className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 text-2xl font-extrabold cursor-pointer hover:opacity-80">
+<<<<<<< HEAD
           HookieHangout
+=======
+          InstaHang   
+>>>>>>> location
         </h1>
 
         {/* Navigation Links */}
         <div className="hidden md:flex space-x-6">
+<<<<<<< HEAD
           <Link className="text-gray-700 hover:text-indigo-600 font-medium transition-colors" to="/map">
             Explore
           </Link>
           <Link className="text-gray-700 hover:text-indigo-600 font-medium transition-colors" to="/chat">
+=======
+          <Link className="text-gray-700 hover:text-indigo-600 font-medium transition-colors" to="/login">
+            Explore
+          </Link>
+          <Link className="text-gray-700 hover:text-indigo-600 font-medium transition-colors" to="/">
+>>>>>>> location
             Messages
           </Link>
           <Link className="text-gray-700 hover:text-indigo-600 font-medium transition-colors" to="/login">
@@ -102,7 +113,11 @@ function ProfileButton({ profileOpen, setProfileOpen, profileRef }) {
         <User className="h-6 w-6 text-gray-600" />
       </button>
 
+<<<<<<< HEAD
       {/* Profile Dropdown */}
+=======
+     
+>>>>>>> location
       {profileOpen && (
         <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50 dropdown-menu">
           <Link
