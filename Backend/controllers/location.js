@@ -97,6 +97,10 @@ async function updateLocationOnLogin(req, res, next) {
       },
       { upsert: true, new: true }
     );
+
+
+    // location = await UserLocation.findOne({userId});
+    // console.log(location)
     
     next();
   } catch (error) {
