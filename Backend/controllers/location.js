@@ -112,77 +112,109 @@ async function updateLocationOnLogin(req, res, next) {
 
 // Get nearby users within a specified radius
 async function getNearbyUsers(req, res) {
-    try {
-      const userId = req.userId; // Current user ID from auth middleware
-      const { radius } = req.query; // Radius in kilometers
-      
-      // Validate radius
-      const radiusInKm = parseFloat(radius) || 5; // Default to 5km if not provided
-      
-      // Get current user's location
-      const userLocation = await UserLocation.findOne({ userId });
-      
-      if (!userLocation) {
-        return res.status(404).json({ error: "Your location is not available. Please update your location first." });
-      }
-      
-      const { latitude, longitude } = userLocation;
-      
-      // Find nearby users
-      const nearbyUsers = await UserLocation.aggregate([
-        {
-          $geoNear: {
-            near: { 
-              type: "Point", 
-              coordinates: [parseFloat(longitude), parseFloat(latitude)] 
-            },
-            distanceField: "distance",
-            maxDistance: radiusInKm * 1000, // Convert km to meters
-            spherical: true,
-            query: { userId: { $ne:new mongoose.Types.ObjectId(userId) } } // Exclude current user
+  try {
+    const userId = req.userId; // Current user ID from auth middleware
+    const { radius } = req.query; // Radius in kilometers
+    
+    // Validate radius
+    const radiusInKm = parseFloat(radius) || 5; // Default to 5km if not provided
+    
+    // Get current user's location
+    const userLocation = await UserLocation.findOne({ userId });
+    
+    if (!userLocation) {
+      return res.status(404).json({ error: "Your location is not available. Please update your location first." });
+    }
+    
+    const { latitude, longitude } = userLocation;
+    
+    // Find nearby users with enhanced interest information
+    const nearbyUsers = await UserLocation.aggregate([
+      {
+        $geoNear: {
+          near: { 
+            type: "Point", 
+            coordinates: [parseFloat(longitude), parseFloat(latitude)] 
+          },
+          distanceField: "distance",
+          maxDistance: radiusInKm * 1000, // Convert km to meters
+          spherical: true,
+          query: { userId: { $ne: new mongoose.Types.ObjectId(userId) } } // Exclude current user
+        }
+      },
+      {
+        $lookup: {
+          from: "users", // The name of your users collection
+          localField: "userId",
+          foreignField: "_id",
+          as: "userDetails"
+        }
+      },
+      {
+        $unwind: "$userDetails"
+      },
+      // Add lookup to get interests
+      {
+        $lookup: {
+          from: "userinterests",
+          localField: "userId",
+          foreignField: "userId",
+          as: "interestsDetails"
+        }
+      },
+      {
+        $addFields: {
+          interestsProfile: { 
+            $cond: { 
+              if: { $gt: [{ $size: "$interestsDetails" }, 0] }, 
+              then: { $arrayElemAt: ["$interestsDetails", 0] }, 
+              else: null 
+            } 
           }
-        },
-        {
-          $lookup: {
-            from: "users", // The name of your users collection
-            localField: "userId",
-            foreignField: "_id",
-            as: "userDetails"
-          }
-        },
-        {
-          $unwind: "$userDetails"
-        },
-        {
-          $project: {
-            _id: 0,
-            userId: 1,
-            distance: 1, // Distance in meters
-            distanceInKm: { $divide: ["$distance", 1000] }, // Convert to kilometers
-            latitude: 1,
-            longitude: 1,
-            lastUpdated: 1,
-            user: {
-              name: "$userDetails.name",
-              UserName: "$userDetails.UserName"
-              // Don't include sensitive info like email
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          userId: 1,
+          distance: 1, // Distance in meters
+          distanceInKm: { $divide: ["$distance", 1000] }, // Convert to kilometers
+          latitude: 1,
+          longitude: 1,
+          lastUpdated: 1,
+          user: {
+            name: "$userDetails.name",
+            UserName: "$userDetails.UserName"
+            // Don't include sensitive info like email
+          },
+          interests: {
+            $cond: {
+              if: "$interestsProfile",
+              then: {
+                interests: "$interestsProfile.interests",
+                activities: "$interestsProfile.activities",
+                bio: "$interestsProfile.bio",
+                isProfileComplete: "$interestsProfile.isProfileComplete"
+              },
+              else: null
             }
           }
-        },
-        {
-          $sort: { distance: 1 } // Sort by distance, closest first
         }
-      ]);
-      
-      return res.status(200).json({
-        message: `Found ${nearbyUsers.length} users within ${radiusInKm}km radius`,
-        users: nearbyUsers
-      });
-    } catch (error) {
-      console.error("Error finding nearby users:", error);
-      return res.status(500).json({ error: "Server error: " + error.message });
-    }
+      },
+      {
+        $sort: { distance: 1 } // Sort by distance, closest first
+      }
+    ]);
+    
+    return res.status(200).json({
+      message: `Found ${nearbyUsers.length} users within ${radiusInKm}km radius`,
+      users: nearbyUsers
+    });
+  } catch (error) {
+    console.error("Error finding nearby users:", error);
+    return res.status(500).json({ error: "Server error: " + error.message });
   }
+}
 
 module.exports = {
   updateUserLocation,

@@ -3,6 +3,7 @@ const express=require("express");
 const app=express();
 const route=require("./routes/user")
 const locationRoutes=require("./routes/locationRoutes");
+const interestsRoutes=require("./routes/intersetsRoute");
 const mongoose=require("mongoose");
 const cors=require("cors");
 const port=8500;
@@ -15,6 +16,7 @@ app.use(express.urlencoded({extended:false}));
 app.use(cors());
 app.use("/user",route);
 app.use("/location",locationRoutes);
+app.use("/interests",interestsRoutes);
 app.get("/",(req,res)=>{
     return res.end("HOMEPAGE");
 })

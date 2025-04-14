@@ -2,6 +2,7 @@ const user = require("../models/user");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
+const UserInterests=require("../models/userinterests")
 
 const transporter = nodemailer.createTransport({
     service: 'gmail', 
@@ -173,6 +174,10 @@ async function AuthenticateUser(req, res) {
                         userId: userId,
                         latitude, 
                         longitude,
+                        location: {
+                            type: "Point",
+                            coordinates: [parseFloat(longitude), parseFloat(latitude)]
+                        },
                         lastUpdated: Date.now() 
                     },
                     { upsert: true }
@@ -183,7 +188,17 @@ async function AuthenticateUser(req, res) {
             }
         }
         
-        // Return success with token
+        // Check if user has completed their interests profile
+        let isProfileComplete = false;
+        try {
+            const interestsProfile = await UserInterests.findOne({ userId: userId });
+            isProfileComplete = interestsProfile ? interestsProfile.isProfileComplete : false;
+        } catch (profileErr) {
+            console.error("Profile check error:", profileErr);
+            // Continue anyway, profile check is not critical
+        }
+        
+        // Return success with token and profile completion status
         return res.status(200).json({
             message: "User Logged In Successfully",
             token,
@@ -191,7 +206,8 @@ async function AuthenticateUser(req, res) {
                 id: userId,
                 name: User.name || (User._doc ? User._doc.name : null),
                 UserName: User.UserName || (User._doc ? User._doc.UserName : null), 
-                email: User.email || (User._doc ? User._doc.email : null)
+                email: User.email || (User._doc ? User._doc.email : null),
+                isProfileComplete: isProfileComplete
             }
         });
     } catch (error) {
