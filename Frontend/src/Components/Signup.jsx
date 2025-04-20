@@ -13,6 +13,7 @@ function Signup() {
     password: "",
     agree: false,
   });
+  const [isLoading, setIsLoading] = useState(false); // Loading state
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -24,18 +25,19 @@ function Signup() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    setIsLoading(true); // Set loading to true
+
     const dataToSend = {
       name: formData.fullname,
       UserName: formData.username,
       email: formData.email,
       password: formData.password,
     };
-    
+
     console.log("Data being sent:", dataToSend);
 
     try {
-      const response = await axios.post("http://localhost:8000/user/signup", dataToSend);
+      const response = await axios.post("http://localhost:8500/user/signup", dataToSend);
 
       if (response.status === 200 || response.status === 201) {
         Store.addNotification({
@@ -51,7 +53,7 @@ function Signup() {
 
         setTimeout(() => {
           navigate("/login");
-        }, 2000);
+        }, 500); // Reduced delay for a snappier feel
       }
     } catch (error) {
       console.error("Signup error:", error.response?.data || error.message);
@@ -65,6 +67,8 @@ function Signup() {
         animationOut: ["animate__animated", "animate__fadeOut"],
         dismiss: { duration: 3000, onScreen: true },
       });
+    } finally {
+      setIsLoading(false); // Reset loading state
     }
   };
 
@@ -119,17 +123,29 @@ function Signup() {
               name="agree"
               checked={formData.agree}
               onChange={handleChange}
-              className="mr-2"
+              className="mr-2 cursor-pointer"
               required
             />
             <label className="text-gray-600 text-sm">
               I agree to the <Link className="text-indigo-500">Terms and Conditions</Link>
             </label>
           </div>
+<<<<<<< HEAD
+          <button className="w-full bg-indigo-500 text-white py-3 rounded-xl font-semibold hover:bg-indigo-600 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-in-out cursor-pointer">
+  Sign Up
+</button>
 
-          <button className="w-full bg-indigo-500 text-white py-3 rounded-xl font-semibold hover:bg-indigo-600 transition">
-            Sign Up
+
+=======
+
+          <button
+            className={`w-full bg-indigo-500 text-white py-3 rounded-xl font-semibold transition cursor-pointer
+              ${isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-indigo-600'}`}
+            disabled={isLoading}
+          >
+            {isLoading ? "Signing up..." : "Sign Up"}
           </button>
+>>>>>>> location
         </form>
         <p className="text-center text-sm text-gray-600 mt-4">
           Already have an account? <Link to="/login" className="text-indigo-500">Log in</Link>
